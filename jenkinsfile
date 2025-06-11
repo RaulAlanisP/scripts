@@ -1,0 +1,82 @@
+Plugins
+  eclipse temurin installer (configurar multiples versiondes de java)
+  pipeline maven integration
+  sonnarqube scanner
+  docker plugin
+  docker pipeline
+
+configurar plugins en tools
+
+pipeline {
+    agent any
+    
+    tools {
+        jdk 'jdk21'
+        maven 'maven3'
+    }
+    
+    environment {
+        SCANNER_HOME= tool 'sonar-scanner'
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'develop', credentialsId: 'Github_user_password', url: 'https://github.com/RaulAlanisP/spring-boot-sonarqube.git'
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                sh "mvn test"
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('Sonarqube_local') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=spring-app-dev -Dsonar.projectName=spring-app-dev \
+                        -Dsonar.java.binaries=.  '''
+                }
+            }
+        }
+        //stage('Quality Gate') {
+        //    steps {
+        //        script {
+        //            waitForQualityGate abortPipeline: false, credentialsId: 'Sonarqube_local'
+        //        }
+        //    }
+        //}
+        stage('Build') {
+            steps {
+                sh "mvn package"
+            }
+        }
+//        stage('Build & Tag Docker Image') {
+//            steps {
+//                script {
+//                    withDockerRegistry(credentialsId: 'Docker_cred', toolName: 'docker') {
+//                        sh "sudo docker build -t raulalanis/spring-sonarqube-api:${env.BUILD_ID} ."
+//                    }
+                    //def app = docker.build("raulalanis/spring-sonarqube-api:latest")
+//                }
+//            }
+//        }
+//        stage('Push Docker Hub Image') {
+//            steps {
+//                script {
+//                    withDockerRegistry(credentialsId: 'Docker_cred', toolName: 'docker') {
+//                        sh "docker push raulalanis/spring-sonarqube-api:${env.BUILD_ID}"
+//                    }
+                    //docker.withRegistry('https://index.docker.io/v1/', 'Docker_cred') {
+                    //    def app = docker.image('raulalanis/spring-sonarqube-api:latest')
+                    //    app.push()
+                    //}
+//                }
+//            }
+//        }
+    }
+}
