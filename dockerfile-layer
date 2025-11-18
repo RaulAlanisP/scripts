@@ -1,0 +1,20 @@
+# Etapa 1: El Constructor - Prepara las capas del JAR
+FROM eclipse-temurin:21-jre-alpine as builder
+WORKDIR application
+ARG JAR_FILE=target/*.jar
+# Copiamos el JAR
+COPY ${JAR_FILE} app.jar
+# Usamos layertools para extraer las capas
+RUN java -Djarmode=layertools -jar app.jar extract
+
+# Etapa 2: El Runtime - La imagen final mínima
+# Usamos una base distroless optimizada para Java
+FROM gcr.io/distroless/java21-debian12
+WORKDIR application
+# Copiamos las capas optimizadas desde la etapa builder
+COPY --from=builder application/dependencies/ ./
+COPY --from=builder application/snapshot-dependencies/ ./
+COPY --from=builder application/spring-boot-loader/ ./
+COPY --from=builder application/application/ ./
+# El punto de entrada que lanza la app
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
