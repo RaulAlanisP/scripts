@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-cat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-cat
+  template:
+    metadata:
+      labels:
+        app: ms-cat
+    spec:
+      containers:
+        - name: ms-cat
+          image: ms-cat-offer-services:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-cat
+spec:
+  selector:
+    app: ms-cat
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
