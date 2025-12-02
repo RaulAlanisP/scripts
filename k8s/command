@@ -1,0 +1,13 @@
+# Ejecutar script
+chmod +x k8s/deploy-minikube.sh 
+./k8s/deploy-minikube.sh
+
+# Mostrar servicios en minikube
+kubectl get all
+
+# Mostrar logs de la etiqueta "ms-cat" en minikube
+kubectl logs -l app=ms-cat --tail=200
+
+# Eliminar servicios de minikube
+kubectl delete -f k8s/ms-cat-offer-services.yaml
+
